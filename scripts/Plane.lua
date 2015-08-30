@@ -19,6 +19,11 @@ function Plane:init()
 end
 
 function Plane:update(deltaTime)
+	-- Limit power
+	if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
+		local rotationDiff = 1 - math.abs(270 - self:getRotation()) / self.rotationLimit
+		self:setPower(self.power - self.powerSpeed * self.rotationLimitMul * rotationDiff * deltaTime)
+	end
 	local x = self:getX()
 	local y = self:getY()
 	
