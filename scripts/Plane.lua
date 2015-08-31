@@ -1,9 +1,9 @@
 local Plane = Core.class(Sprite)
 
 function Plane:init(isLocal)
-	local bitmap = Bitmap.new(Texture.new("assets/plane.png"))
-	bitmap:setAnchorPoint(0.5, 0.5)
-	self:addChild(bitmap)
+	self.bitmap = Bitmap.new(Texture.new("assets/plane.png"))
+	self.bitmap:setAnchorPoint(0.5, 0.5)
+	self:addChild(self.bitmap)
 
 	self.rotationSpeed = 360 / 3
 	self.rotationLimit = 60
@@ -25,10 +25,10 @@ function Plane:init(isLocal)
 		playerName = networkManager:getValue("username") or "Unknown"
  		self.nameText = TextField.new(nil, tostring(playerName))
 		self.nameText:setScale(0.25)
-		self.nameText:setPosition(-self.nameText:getWidth() / 2, - bitmap:getHeight())
+		self.nameText:setPosition(-self.nameText:getWidth() / 2, - self.bitmap:getHeight())
 		self.nameText:setTextColor(0xFFFFFF)
 		self:addChild(self.nameText)
-		bitmap:setColorTransform(0.2, 0.5, 1, 1)
+		self.bitmap:setColorTransform(0.2, 0.5, 1, 1)
 	end
 end
 

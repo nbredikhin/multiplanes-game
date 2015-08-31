@@ -50,16 +50,24 @@ function GameScreen:remoteUpdateName(e)
 	self.remotePlayer.nameText:setText(tostring(name))
 end
 
-function GameScreen:createBullet(x, y, rotation)
+function GameScreen:createBullet(x, y, rotation, isLocal)
 	if not x or not y or not rotation then
 		return
 	end
-	local bullet = Bullet.new(self.bulletTexture)
+	local bullet = Bullet.new(self.bulletTexture, isLocal)
 	bullet:setPosition(x, y)
 	bullet:setRotation(rotation)
 	self.world:addChild(bullet)
 
 	table.insert(self.bullets, bullet)
+end
+
+function GameScreen:removeBullet(index)
+	if not self.bullets[index] then
+		return
+	end
+	self.world:removeChild(self.bullets[index])
+	table.remove(self.bullets, index)
 end
 
 function GameScreen:shoot()
@@ -85,6 +93,21 @@ function GameScreen:update(deltaTime)
 	-- Update bullets
 	for i, bullet in ipairs(self.bullets) do
 		bullet:update(deltaTime)
+		local bx, by = bullet:getPosition()
+		bx, by = self.world:localToGlobal(bx, by)
+		bx, by = self.localPlayer:globalToLocal(bx, by)
+		if self.localPlayer:hitTestPoint(bx, by) then
+			-- If hit by bullet created by another player
+			if not bullet.isLocal then
+				-- todo: apply damage
+				print("OMG DAMAGE")
+			end
+			self:removeBullet(i)	
+			print("hit")
+		elseif bullet.lifetime <= 0 then
+			self:removeBullet(i)
+			break	
+		end
 	end
 
 	-- World bounds
