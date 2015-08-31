@@ -102,6 +102,9 @@ function NetworkManager:getValue(key)
 end
 
 function NetworkManager:triggerRemoteEvent(eventName, data)
+	if not self.serverlink then
+		return
+	end
 	self.serverlink:callMethod("triggerEvent", eventName, data)
 end
 

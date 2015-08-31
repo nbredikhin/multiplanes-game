@@ -3,6 +3,7 @@ local Bullet 		= require "scripts.Bullet"
 local InputManager 	= require "scripts.InputManager"
 local Plane 		= require "scripts.Plane"
 local Screen 		= require "scripts.screens.Screen"
+local Particle 		= require "scripts.Particle"
 
 local GameScreen = Core.class(Screen)
 
@@ -33,16 +34,24 @@ function GameScreen:load(isHost)
 	self.bulletTexture = Texture.new("assets/bullet.png")
 	self.bullets = {}
 
+	-- Particles
+	self.particlesTextures = {}
+	self.particlesTextures["smoke"] = Texture.new("assets/particles/smoke.png")
+	self.particles = {}
+
 	-- Networking stuff
 	self.isHost = isHost
 
 	networkManager:addEventListener("remoteUpdateName", self.remoteUpdateName, self)
 	networkManager:addEventListener("remoteShoot", self.remoteShoot, self)
+	networkManager:addEventListener("remoteHit", self.remoteHit, self)
 
 	networkManager:triggerRemoteEvent("remoteUpdateName", networkManager.username)
 
 	self.inputManager:addEventListener(InputManager.TOUCH_BEGIN, self.shoot, self)
 	networkManager:setValue("username", networkManager.username)
+
+	self.shootDelay = 0
 end
 
 function GameScreen:remoteUpdateName(e)
@@ -71,17 +80,46 @@ function GameScreen:removeBullet(index)
 end
 
 function GameScreen:shoot()
+	if self.shootDelay >= 0 then
+		return
+	end
 	local x, y, rotation = self.localPlayer:getX(), self.localPlayer:getY(), self.localPlayer:getRotation()
 	networkManager:triggerRemoteEvent("remoteShoot", json.encode({x, y, rotation}))
-	self:createBullet(x, y, rotation)
+	self:createBullet(x, y, rotation, true)
+
+	self.shootDelay = 0.5
 end
 
 function GameScreen:remoteShoot(e)
 	local x, y, rotation = unpack(json.decode(e.data))
-	self:createBullet(x, y, rotation)
+	self:createBullet(x, y, rotation, false)
+end
+
+function GameScreen:remoteHit(e)
+	local newHealth = tonumber(e.data)
+	if not newHealth then
+		return
+	end
+	self.remotePlayer.health = newHealth
+end
+
+function GameScreen:createPlaneSmoke(plane, deltaTime)
+	if plane.health > 75 then
+		return
+	end
+	plane.smokeDelay = plane.smokeDelay - deltaTime
+	if plane.smokeDelay <= 0 then
+		plane.smokeDelay = math.max(0, (plane.health - 25) / 75 / 2)
+		local particle = Particle.new(self.particlesTextures["smoke"])
+		particle:setPosition(plane:getX(), plane:getY())
+		self.world:addChild(particle)
+		table.insert(self.particles, particle)
+	end
 end
 
 function GameScreen:update(deltaTime)
+	self.shootDelay = self.shootDelay - deltaTime
+
 	networkManager:setValue("px", self.localPlayer:getX())
 	networkManager:setValue("py", self.localPlayer:getY())
 	networkManager:setValue("rot", self.localPlayer:getRotation())
@@ -89,24 +127,30 @@ function GameScreen:update(deltaTime)
 	-- Update players
 	self.localPlayer:update(deltaTime)
 	self.remotePlayer:update(deltaTime)
+	-- Particles
+	self:createPlaneSmoke(self.localPlayer, deltaTime)
+	self:createPlaneSmoke(self.remotePlayer, deltaTime)
+	for i, particle in ipairs(self.particles) do
+		particle:update(deltaTime)
+		if particle.lifetime <= 0 then
+			self.world:removeChild(particle)
+			table.remove(self.particles, i)	
+		end
+	end
 
 	-- Update bullets
 	for i, bullet in ipairs(self.bullets) do
 		bullet:update(deltaTime)
 		local bx, by = bullet:getPosition()
 		bx, by = self.world:localToGlobal(bx, by)
-		bx, by = self.localPlayer:globalToLocal(bx, by)
-		if self.localPlayer:hitTestPoint(bx, by) then
-			-- If hit by bullet created by another player
-			if not bullet.isLocal then
-				-- todo: apply damage
-				print("OMG DAMAGE")
-			end
+		if not bullet.isLocal and self.localPlayer:hitTestPoint(bx, by) then
+			self.localPlayer.health = self.localPlayer.health - 25
+			networkManager:triggerRemoteEvent("remoteHit", self.localPlayer.health)
 			self:removeBullet(i)	
-			print("hit")
+		elseif bullet.isLocal and self.remotePlayer:hitTestPoint(bx, by) then
+			self:removeBullet(i)	
 		elseif bullet.lifetime <= 0 then
 			self:removeBullet(i)
-			break	
 		end
 	end
 

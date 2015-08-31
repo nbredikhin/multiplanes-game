@@ -30,6 +30,9 @@ function Plane:init(isLocal)
 		self:addChild(self.nameText)
 		self.bitmap:setColorTransform(0.2, 0.5, 1, 1)
 	end
+
+	self.health = 100
+	self.smokeDelay = 0.1
 end
 
 function Plane:update(deltaTime)
