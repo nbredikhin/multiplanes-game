@@ -1,6 +1,6 @@
 local Plane = Core.class(Sprite)
 
-function Plane:init()
+function Plane:init(isLocal)
 	local bitmap = Bitmap.new(Texture.new("assets/plane.png"))
 	bitmap:setAnchorPoint(0.5, 0.5)
 	self:addChild(bitmap)
@@ -12,32 +12,51 @@ function Plane:init()
 	self.power = 1
 	self.powerSpeed = 0.5
 
-	self.speed = 20
+	self.speed = 30
 	self.gravity = 20
 
 	self.oldSetRotation = Sprite.setRotation
+
+	self.isLocal = isLocal
+	self.remoteVars = {}
+	self.interpolationMul = 0.2
 end
 
 function Plane:update(deltaTime)
-	-- Limit power
-	if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
-		local rotationDiff = 1 - math.abs(270 - self:getRotation()) / self.rotationLimit
-		self:setPower(self.power - self.powerSpeed * self.rotationLimitMul * rotationDiff * deltaTime)
+	if self.isLocal then
+		-- Limit power
+		if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
+			local rotationDiff = 1 - math.abs(270 - self:getRotation()) / self.rotationLimit
+			self:setPower(self.power - self.powerSpeed * self.rotationLimitMul * rotationDiff * deltaTime)
+		end
+		local x = self:getX()
+		local y = self:getY()
+		
+		local rotationRad = self:getRotation() / 180 * math.pi
+		local moveX = math.cos(rotationRad)
+		local moveY = math.sin(rotationRad)
+
+		local moveSpeed = self.speed * self.power
+		local gravitySpeed = moveY + self.gravity * (1 - self.power)
+
+		x = x + moveX * moveSpeed * deltaTime
+		y = y + (moveY * moveSpeed + gravitySpeed) * deltaTime
+
+		self:setPosition(x, y)
+	else
+		self.remoteVars["x"] = networkManager:getValue("px") or 0
+		self.remoteVars["y"] = networkManager:getValue("py") or 0
+		self.remoteVars["rotation"] = networkManager:getValue("rot") or 0
+
+		for key, value in pairs(self.remoteVars) do
+			local currentValue = self:get(key)
+			if key == "rotation" then
+				self:setRotation(currentValue - utils.differenceBetweenAngles(value, currentValue) * self.interpolationMul)
+			else
+				self:set(key, currentValue + (value - currentValue) * self.interpolationMul)
+			end
+		end
 	end
-	local x = self:getX()
-	local y = self:getY()
-	
-	local rotationRad = self:getRotation() / 180 * math.pi
-	local moveX = math.cos(rotationRad)
-	local moveY = math.sin(rotationRad)
-
-	local moveSpeed = self.speed * self.power
-	local gravitySpeed = moveY + self.gravity * (1 - self.power)
-
-	x = x + moveX * moveSpeed * deltaTime
-	y = y + (moveY * moveSpeed + gravitySpeed) * deltaTime
-
-	self:setPosition(x, y)
 end
 
 function Plane:setPower(power)

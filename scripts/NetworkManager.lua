@@ -59,7 +59,10 @@ function NetworkManager:onNewClient(e)
 	self.serverlink:accept(e.data.id)
 	print("SERVER: Accepted client: " .. tostring(e.data.id))
 	self.serverlink:stopBroadcast()
+
+	-- Setup rpc and start listening
 	self:setupRPC()
+	self.serverlink:startListening()
 	self:dispatchEvent(Event.new("startGame"))
 end
 

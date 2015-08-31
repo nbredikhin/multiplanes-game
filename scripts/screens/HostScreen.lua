@@ -48,7 +48,7 @@ function HostScreen:update(deltaTime)
 end
 
 function HostScreen:startGame(e)
-	screenManager:loadScreen("GameScreen")
+	screenManager:loadScreen("GameScreen", true)
 end
 
 return HostScreen

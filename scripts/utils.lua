@@ -37,5 +37,16 @@ function utils.wrapAngle(value)
 	return value
 end
 
+function utils.differenceBetweenAngles(firstAngle, secondAngle)
+	local difference = secondAngle - firstAngle
+	while difference < -180 do
+		difference = difference + 360
+	end
+	while difference > 180 do
+		difference = difference - 360
+	end
+	return difference
+end
+
 utils.screenWidth, utils.screenHeight = utils.getScreenSize()
 return utils

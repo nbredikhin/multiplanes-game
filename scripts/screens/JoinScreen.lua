@@ -57,7 +57,7 @@ function JoinScreen:addServer(e)
 end
 
 function JoinScreen:startGame(e)
-	screenManager:loadScreen("GameScreen")
+	screenManager:loadScreen("GameScreen", false)
 end
 
 function JoinScreen:update(deltaTime)
