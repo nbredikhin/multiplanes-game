@@ -1,7 +1,7 @@
-utils = require "scripts.utils"
+json 	= require "json"
+utils 	= require "scripts.utils"
 local ScreenManager 	= require "scripts.screens.ScreenManager"
 local NetworkManager 	= require "scripts.NetworkManager" 
-
 
 -- Screen size and game scale
 screenWidth, screenHeight = utils:getScreenSize()

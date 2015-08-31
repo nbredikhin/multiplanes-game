@@ -20,6 +20,16 @@ function Plane:init(isLocal)
 	self.isLocal = isLocal
 	self.remoteVars = {}
 	self.interpolationMul = 0.2
+
+	if not isLocal then
+		playerName = networkManager:getValue("username") or "Unknown"
+ 		self.nameText = TextField.new(nil, tostring(playerName))
+		self.nameText:setScale(0.25)
+		self.nameText:setPosition(-self.nameText:getWidth() / 2, - bitmap:getHeight())
+		self.nameText:setTextColor(0xFFFFFF)
+		self:addChild(self.nameText)
+		bitmap:setColorTransform(0.2, 0.5, 1, 1)
+	end
 end
 
 function Plane:update(deltaTime)
@@ -51,7 +61,8 @@ function Plane:update(deltaTime)
 		for key, value in pairs(self.remoteVars) do
 			local currentValue = self:get(key)
 			if key == "rotation" then
-				self:setRotation(currentValue - utils.differenceBetweenAngles(value, currentValue) * self.interpolationMul)
+				value = utils.wrapAngle(value)
+				self:setRotation(currentValue - utils.differenceBetweenAngles(value, currentValue)* self.interpolationMul)
 			else
 				self:set(key, currentValue + (value - currentValue) * self.interpolationMul)
 			end

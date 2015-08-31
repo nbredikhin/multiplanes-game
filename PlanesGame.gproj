@@ -21,6 +21,7 @@
   <file source="scripts/NetworkManager.lua"/>
   <file source="scripts/InputManager.lua"/>
   <file source="scripts/Plane.lua"/>
+  <file source="scripts/Bullet.lua"/>
   <file source="scripts/utils.lua"/>
   <file source="scripts/main.lua"/>
  </folder>
@@ -31,5 +32,6 @@
     <file source="assets/background/3.png"/>
   </folder>
   <file source="assets/plane.png"/>
+  <file source="assets/bullet.png"/>
  </folder>
 </project>

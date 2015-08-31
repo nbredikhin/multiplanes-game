@@ -18,7 +18,7 @@ function NetworkManager:startClient()
 	self.serverlink:addEventListener("newServer", self.onNewServer, self)
 	self.serverlink:addEventListener("onAccepted", self.onAccepted, self)
 	self.serverlink:startListening()
-
+	self:setupRPC()
 	print("CLIENT: Client started")
 end
 
@@ -36,7 +36,6 @@ end
 
 function NetworkManager:onAccepted(e)
 	print("CLIENT: Got accepted")
-	self:setupRPC()
 	self:dispatchEvent(Event.new("startGame"))
 end
 
@@ -51,7 +50,7 @@ function NetworkManager:startServer()
 	self.serverlink = Server.new({username=self.username})
 	self.serverlink:addEventListener("newClient", self.onNewClient, self)
 	self.serverlink:startBroadcast()
-
+	self:setupRPC()
 	print("SERVER: Server started")
 end
 
@@ -60,8 +59,6 @@ function NetworkManager:onNewClient(e)
 	print("SERVER: Accepted client: " .. tostring(e.data.id))
 	self.serverlink:stopBroadcast()
 
-	-- Setup rpc and start listening
-	self:setupRPC()
 	self.serverlink:startListening()
 	self:dispatchEvent(Event.new("startGame"))
 end
@@ -90,6 +87,7 @@ function NetworkManager:setupRPC()
 
 	self.remoteData = {}
 	self.serverlink:addMethod("setValue", self.RPC_setValue, self)
+	self.serverlink:addMethod("triggerEvent", self.RPC_triggerEvent, self)
 end
 
 function NetworkManager:setValue(key, value)
@@ -103,8 +101,18 @@ function NetworkManager:getValue(key)
 	return self.remoteData[key]
 end
 
+function NetworkManager:triggerRemoteEvent(eventName, data)
+	self.serverlink:callMethod("triggerEvent", eventName, data)
+end
+
 function NetworkManager:RPC_setValue(key, value)
 	self.remoteData[key] = value
+end
+
+function NetworkManager:RPC_triggerEvent(eventName, data)
+	local event = Event.new(eventName)
+	event.data = data
+	self:dispatchEvent(event)
 end
 
 return NetworkManager
