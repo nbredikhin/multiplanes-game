@@ -8,10 +8,17 @@
   	<file source="scripts/screens/ScreenManager.lua"/>
   	<file source="scripts/screens/GameScreen.lua"/>
   	<file source="scripts/screens/MenuScreen.lua"/>
+    <file source="scripts/screens/JoinScreen.lua"/>
+    <file source="scripts/screens/HostScreen.lua"/>
   </folder>
   <folder name="menu">
     <file source="scripts/menu/Background.lua"/>
   </folder>
+  <folder name="lib">
+    <file source="scripts/lib/Unite.lua"/>
+  </folder>
+  <file source="C:/Program Files (x86)/Gideros/All Plugins/LuaSocket/source/socket.lua"/>
+  <file source="scripts/NetworkManager.lua"/>
   <file source="scripts/InputManager.lua"/>
   <file source="scripts/Plane.lua"/>
   <file source="scripts/utils.lua"/>

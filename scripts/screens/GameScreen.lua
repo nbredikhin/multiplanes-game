@@ -11,13 +11,18 @@ function GameScreen:load()
 	self:addChild(self.world)
 
 	-- Create background
-	local background = Background.new()
-	self.world:addChild(background)
+	self.background = Background.new()
+	self.world:addChild(self.background)
 
-	-- Create player
-	self.player = Plane.new()
-	self.world:addChild(self.player)
-	self.player:setPosition(32, 16)
+	-- Create local player
+	self.localPlayer = Plane.new()
+	self.world:addChild(self.localPlayer)
+	self.localPlayer:setPosition(32, 16)
+
+	-- Create remote player
+	self.remotePlayer = Plane.new()
+	self.world:addChild(self.remotePlayer)
+	self.remotePlayer:setPosition(0, 0)
 
 	-- Setup input
 	self.inputManager = InputManager.new()
@@ -25,11 +30,31 @@ function GameScreen:load()
 end
 
 function GameScreen:update(deltaTime)
-	self.player:update(deltaTime)
+	networkManager:setValue("px", self.localPlayer:getX())
+	networkManager:setValue("py", self.localPlayer:getY())
+	networkManager:setValue("rot", self.localPlayer:getRotation())
+
+	self.localPlayer:update(deltaTime)
+	self.remotePlayer:setX(networkManager:getValue("px") or 0)
+	self.remotePlayer:setY(networkManager:getValue("py") or 0)
+	self.remotePlayer:setRotation(networkManager:getValue("rot") or 0)
+
+	-- World bounds
+	if self.localPlayer:getX() > self.background:getWidth() then
+		self.localPlayer:setX(0)
+	elseif self.localPlayer:getX() < 0 then
+		self.localPlayer:setX(self.background:getWidth())
+	end
+
+	-- Camera following player
+	local worldX = -self.localPlayer:getX() + screenWidth / 2
+	worldX = math.max(worldX, -self.background:getWidth() + screenWidth)
+	worldX = math.min(worldX, 0)
+	self.world:setX(worldX)
 
 	-- Input
-	self.player:setRotation(self.player:getRotation() + self.inputManager.valueX * self.player.rotationSpeed * deltaTime)
-	self.player:setPower(self.player.power - self.inputManager.valueY * self.player.powerSpeed * deltaTime)
+	self.localPlayer:setRotation(self.localPlayer:getRotation() + self.inputManager.valueX * self.localPlayer.rotationSpeed * deltaTime)
+	self.localPlayer:setPower(self.localPlayer.power - self.inputManager.valueY * self.localPlayer.powerSpeed * deltaTime)
 end
 
 return GameScreen

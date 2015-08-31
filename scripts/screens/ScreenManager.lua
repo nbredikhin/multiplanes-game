@@ -1,5 +1,7 @@
 local MenuScreen = require "scripts.screens.MenuScreen"
 local GameScreen = require "scripts.screens.GameScreen"
+local HostScreen = require "scripts.screens.HostScreen"
+local JoinScreen = require "scripts.screens.JoinScreen"
 
 local ScreenManager = Core.class(Sprite)
 
@@ -8,13 +10,15 @@ function ScreenManager:init()
 
 	self.screens = {
 		MenuScreen = MenuScreen,
-		GameScreen = GameScreen
+		GameScreen = GameScreen,
+		HostScreen = HostScreen,
+		JoinScreen = JoinScreen
 	}
 
 	self:addEventListener(Event.ENTER_FRAME, self.update, self)
 end
 
-function ScreenManager:loadScreen(screenName)
+function ScreenManager:loadScreen(screenName, ...)
 	if not self.screens[screenName] then
 		print("Error loading screen '" .. tostring(screenName) .. "': screen not found.")
 		return false
@@ -30,7 +34,7 @@ function ScreenManager:loadScreen(screenName)
 	local ScreenClass = self.screens[screenName]
 	self.currentScreen = ScreenClass.new()
 	self:addChild(self.currentScreen)
-	self.currentScreen:load()
+	self.currentScreen:load(...)
 	return true
 end
 

@@ -17,18 +17,29 @@ function MenuScreen:load()
 
 	self.time = 0
 
-	self.startButton = TextField.new(nil, "Start")
-	self.startButton:setTextColor(0xFFFFFF)
-	self.startButton:setScale(0.5)
-	self:addChild(self.startButton)
-	self.startButton:setPosition(screenWidth / 2 - self.startButton:getWidth() / 2, screenHeight / 2 + self.startButton:getHeight() / 2)
+	self.hostButton = TextField.new(nil, "Host game")
+	self.hostButton:setTextColor(0xFFFFFF)
+	self.hostButton:setScale(0.5)
+	self:addChild(self.hostButton)
+	self.hostButton:setPosition(screenWidth / 2 - self.hostButton:getWidth() / 2, screenHeight / 2 + self.hostButton:getHeight() / 2)
 
+	-- Just for test
+	self.joinButton = TextField.new(nil, "Join game")
+	self.joinButton:setTextColor(0xFFFFFF)
+	self.joinButton:setScale(0.5)
+	self:addChild(self.joinButton)
+	self.joinButton:setPosition(screenWidth / 2 - self.joinButton:getWidth() / 2, self.hostButton:getY() + self.hostButton:getHeight() * 2)
+	
 	self:addEventListener(Event.TOUCHES_BEGIN, self.buttonTouch, self)
+
+	networkManager:disconnect()
 end
 
 function MenuScreen:buttonTouch(e)
-	if self.startButton:hitTestPoint(e.touch.x, e.touch.y) then
-		screenManager:loadScreen("GameScreen")
+	if self.hostButton:hitTestPoint(e.touch.x, e.touch.y) then
+		screenManager:loadScreen("HostScreen")
+	elseif self.joinButton:hitTestPoint(e.touch.x, e.touch.y) then
+		screenManager:loadScreen("JoinScreen")
 	end
 end
 
