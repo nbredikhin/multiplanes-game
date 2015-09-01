@@ -37,11 +37,11 @@ function HostScreen:load()
 	info:setPosition(screenWidth / 2 - info:getWidth() / 2, screenHeight / 2)
 	self:addChild(info)
 
-	local info2 = TextField.new(nil, "Waiting for another player to connect...")
-	info2:setTextColor(0xFFFFFF)
-	info2:setScale(0.35)
-	info2:setPosition(screenWidth / 2 - info2:getWidth() / 2, info:getY() + info:getHeight() + info2:getHeight())
-	self:addChild(info2)
+	self.waitingText = TextField.new(nil, "Waiting for another player to connect...")
+	self.waitingText:setTextColor(0xFFFFFF)
+	self.waitingText:setScale(0.35)
+	self.waitingText:setPosition(screenWidth / 2 - self.waitingText:getWidth() / 2, info:getY() + info:getHeight() + self.waitingText:getHeight())
+	self:addChild(self.waitingText)
 
 	networkManager:startServer()
 	networkManager:addEventListener("startGame", self.startGame, self)
@@ -51,6 +51,8 @@ function HostScreen:update(deltaTime)
 	self.time = self.time + deltaTime
 	self.menuText:setY(self.menuText:getHeight() + 4 + math.sin(self.time * 4) * 1.5)
 	self.background:move(BACKGROUND_MOVEMENT_SPEED * deltaTime)
+
+	self.waitingText:setAlpha(math.sin(self.time * 6) * 0.4 + 0.6)
 end
 
 function HostScreen:startGame(e)

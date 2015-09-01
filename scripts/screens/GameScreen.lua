@@ -26,7 +26,7 @@ function GameScreen:load(isHost)
 	-- Create local player
 	self.localPlayer = Plane.new(true)
 	self.world:addChild(self.localPlayer)
-	self.localPlayer:setPosition(32, 16)
+	self.localPlayer:setPosition(16, 32)
 
 	-- Setup input
 	self.inputManager = InputManager.new(false, true)
@@ -56,6 +56,8 @@ function GameScreen:load(isHost)
 	networkManager:addEventListener("remoteUpdateName", self.remoteUpdateName, self)
 	networkManager:addEventListener("remoteShoot", self.remoteShoot, self)
 	networkManager:addEventListener("remoteHit", self.remoteHit, self)
+	networkManager:addEventListener("remoteDeath", self.remotePlayerDeath, self)
+	networkManager:addEventListener("remoteRespawn", self.remotePlayerRespawn, self)
 
 	networkManager:triggerRemoteEvent("remoteUpdateName", networkManager.username)
 
@@ -63,11 +65,13 @@ function GameScreen:load(isHost)
 	networkManager:setValue("username", networkManager.username)
 
 	self.shootDelay = 0
+	self.respawnDelay = 0
 end
 
 function GameScreen:onTouch(e)
 	--local x, y = self.world:globalToLocal(e.touch.x, e.touch.y)
 	--self:createExplosion(x, y)
+	--
 end
 
 function GameScreen:remoteUpdateName(e)
@@ -142,11 +146,52 @@ function GameScreen:createExplosionFire(explosion)
 end
 
 function GameScreen:createExplosion(x, y)
-	for i = 1, 5 do
+	for i = 1, 10 do
 		local particle = ExplosionParticle.new()
 		particle.x = x
 		particle.y = y
 		table.insert(self.explosionsParticles, particle)
+	end
+end
+
+function GameScreen:remotePlayerDeath()
+	self:playerDeath(self.remotePlayer)
+end
+
+function GameScreen:playerDeath(player)
+	if player.isDead then
+		return
+	end
+	player.health = 100
+	player.isDead = true
+	player:setVisible(false)
+	self:createExplosion(player:getPosition())
+
+	if player == self.localPlayer then
+		self.respawnDelay = 3
+		networkManager:triggerRemoteEvent("remoteDeath")
+	end
+end
+
+function GameScreen:remotePlayerRespawn()
+	self:playerRespawn(self.remotePlayer)
+end
+
+function GameScreen:playerRespawn(player)
+	if not player then
+		return
+	end
+	if not player.isDead then
+		return
+	end
+	player.health = 100
+	player:setVisible(true)
+	player.isDead = false
+	if player == self.localPlayer then
+		player:setPosition(16, 32)
+		player.power = 1
+		player:setRotation(0)
+		networkManager:triggerRemoteEvent("remoteRespawn")
 	end
 end
 
@@ -160,6 +205,13 @@ function GameScreen:update(deltaTime)
 	-- Update players
 	self.localPlayer:update(deltaTime)
 	self.remotePlayer:update(deltaTime)
+
+	-- Ground hit
+	if self.localPlayer:getY() > screenHeight then
+		self:playerDeath(self.localPlayer)
+	elseif self.localPlayer:getY() < 0 then
+		self.localPlayer:setPower(self.localPlayer.power - self.localPlayer.powerSpeed * deltaTime * 2)
+	end
 
 	-- Particles
 	self:createPlaneSmoke(self.localPlayer, deltaTime)
@@ -190,14 +242,14 @@ function GameScreen:update(deltaTime)
 		bullet:update(deltaTime)
 		local bx, by = bullet:getPosition()
 		bx, by = self.world:localToGlobal(bx, by)
-		if not bullet.isLocal and self.localPlayer:hitTestPoint(bx, by) then
+		if not self.localPlayer.isDead and not bullet.isLocal and self.localPlayer:hitTestPoint(bx, by) then
 			self.localPlayer.health = self.localPlayer.health - 25
 			if self.localPlayer.health <= 0 then
-				
+				self:playerDeath(self.localPlayer)
 			end
 			networkManager:triggerRemoteEvent("remoteHit", self.localPlayer.health)
 			self:removeBullet(i)	
-		elseif bullet.isLocal and self.remotePlayer:hitTestPoint(bx, by) then
+		elseif not self.remotePlayer.isDead and bullet.isLocal and self.remotePlayer:hitTestPoint(bx, by) then
 			self:removeBullet(i)	
 		elseif bullet.lifetime <= 0 then
 			self:removeBullet(i)
@@ -220,6 +272,14 @@ function GameScreen:update(deltaTime)
 	-- Input
 	self.localPlayer:setRotation(self.localPlayer:getRotation() + self.inputManager.valueX * self.localPlayer.rotationSpeed * deltaTime)
 	self.localPlayer:setPower(self.localPlayer.power - self.inputManager.valueY * self.localPlayer.powerSpeed * deltaTime)
+
+	-- Respawn
+	if self.localPlayer.isDead then
+		self.respawnDelay = self.respawnDelay - deltaTime
+		if self.respawnDelay <= 0 then
+			self:playerRespawn(self.localPlayer)
+		end
+	end
 end
 
 return GameScreen

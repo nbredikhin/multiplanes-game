@@ -21,6 +21,8 @@ function Plane:init(isLocal)
 	self.remoteVars = {}
 	self.interpolationMul = 0.2
 
+	self.isDead = false
+
 	if not isLocal then
 		playerName = networkManager:getValue("username") or "Unknown"
  		self.nameText = TextField.new(nil, tostring(playerName))
@@ -36,6 +38,9 @@ function Plane:init(isLocal)
 end
 
 function Plane:update(deltaTime)
+	if self.isDead then
+		return
+	end
 	if self.isLocal then
 		-- Limit power
 		if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
