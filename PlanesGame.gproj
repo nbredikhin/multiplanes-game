@@ -21,6 +21,7 @@
   <file source="scripts/NetworkManager.lua"/>
   <file source="scripts/InputManager.lua"/>
   <file source="scripts/GameUI.lua"/>
+  <file source="scripts/ExplosionParticle.lua"/>
   <file source="scripts/Particle.lua"/>
   <file source="scripts/Plane.lua"/>
   <file source="scripts/Bullet.lua"/>
@@ -45,6 +46,7 @@
   </folder>
   <folder name="particles">
     <file source="assets/particles/smoke.png"/>
+    <file source="assets/particles/fire.png"/>
   </folder>
   <file source="assets/plane.png"/>
   <file source="assets/bullet.png"/>

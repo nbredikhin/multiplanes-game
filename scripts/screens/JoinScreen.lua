@@ -32,6 +32,14 @@ function JoinScreen:load()
 
 	self.buttonY = self.menuText:getHeight() * 3
 
+	local button = TextField.new(nil, "Rooms:")
+	button:setTextColor(0xFFFFFF)
+	button:setScale(0.6)
+	button:setPosition(screenWidth / 2 - button:getWidth() / 2, self.buttonY)
+	self:addChild(button)
+
+	self.buttonY = self.buttonY + button:getHeight() * 2
+
 	networkManager:startClient()
 	networkManager:addEventListener("newServer", self.addServer, self)
 	networkManager:addEventListener("startGame", self.startGame, self)

@@ -5,6 +5,7 @@ local Plane 		= require "scripts.Plane"
 local Screen 		= require "scripts.screens.Screen"
 local Particle 		= require "scripts.Particle"
 local GameUI 		= require "scripts.GameUI"
+local ExplosionParticle = require "scripts.ExplosionParticle"
 
 local GameScreen = Core.class(Screen)
 
@@ -38,7 +39,11 @@ function GameScreen:load(isHost)
 	-- Particles
 	self.particlesTextures = {}
 	self.particlesTextures["smoke"] = Texture.new("assets/particles/smoke.png")
+	self.particlesTextures["fire"] = Texture.new("assets/particles/fire.png")
 	self.particles = {}
+
+	-- Explosions
+	self.explosionsParticles = {}
 
 	-- User interface layer
 	self.uiContainer = GameUI.new(self.inputManager)
@@ -54,10 +59,15 @@ function GameScreen:load(isHost)
 
 	networkManager:triggerRemoteEvent("remoteUpdateName", networkManager.username)
 
-	self.inputManager:addEventListener(InputManager.TOUCH_BEGIN, self.shoot, self)
+	self.world:addEventListener(Event.TOUCHES_BEGIN, self.onTouch, self)
 	networkManager:setValue("username", networkManager.username)
 
 	self.shootDelay = 0
+end
+
+function GameScreen:onTouch(e)
+	--local x, y = self.world:globalToLocal(e.touch.x, e.touch.y)
+	--self:createExplosion(x, y)
 end
 
 function GameScreen:remoteUpdateName(e)
@@ -123,6 +133,23 @@ function GameScreen:createPlaneSmoke(plane, deltaTime)
 	end
 end
 
+function GameScreen:createExplosionFire(explosion)
+	local particle = Particle.new(self.particlesTextures["fire"])
+	particle:setPosition(explosion.x, explosion.y)
+	particle:update(0)
+	self.world:addChild(particle)
+	table.insert(self.particles, particle)
+end
+
+function GameScreen:createExplosion(x, y)
+	for i = 1, 5 do
+		local particle = ExplosionParticle.new()
+		particle.x = x
+		particle.y = y
+		table.insert(self.explosionsParticles, particle)
+	end
+end
+
 function GameScreen:update(deltaTime)
 	self.shootDelay = self.shootDelay - deltaTime
 
@@ -133,6 +160,7 @@ function GameScreen:update(deltaTime)
 	-- Update players
 	self.localPlayer:update(deltaTime)
 	self.remotePlayer:update(deltaTime)
+
 	-- Particles
 	self:createPlaneSmoke(self.localPlayer, deltaTime)
 	self:createPlaneSmoke(self.remotePlayer, deltaTime)
@@ -141,6 +169,16 @@ function GameScreen:update(deltaTime)
 		if particle.lifetime <= 0 then
 			self.world:removeChild(particle)
 			table.remove(self.particles, i)	
+		end
+	end
+	-- Explosions
+	for i, explosion in ipairs(self.explosionsParticles) do
+		explosion:update(deltaTime)
+		if explosion.particleDelay <= 0 then
+			self:createExplosionFire(explosion)
+		end
+		if explosion.lifetime <= 0 then
+			table.remove(self.explosionsParticles, i)
 		end
 	end
 
@@ -154,6 +192,9 @@ function GameScreen:update(deltaTime)
 		bx, by = self.world:localToGlobal(bx, by)
 		if not bullet.isLocal and self.localPlayer:hitTestPoint(bx, by) then
 			self.localPlayer.health = self.localPlayer.health - 25
+			if self.localPlayer.health <= 0 then
+				
+			end
 			networkManager:triggerRemoteEvent("remoteHit", self.localPlayer.health)
 			self:removeBullet(i)	
 		elseif bullet.isLocal and self.remotePlayer:hitTestPoint(bx, by) then
