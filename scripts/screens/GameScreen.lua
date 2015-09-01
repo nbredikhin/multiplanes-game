@@ -4,6 +4,7 @@ local InputManager 	= require "scripts.InputManager"
 local Plane 		= require "scripts.Plane"
 local Screen 		= require "scripts.screens.Screen"
 local Particle 		= require "scripts.Particle"
+local GameUI 		= require "scripts.GameUI"
 
 local GameScreen = Core.class(Screen)
 
@@ -27,7 +28,7 @@ function GameScreen:load(isHost)
 	self.localPlayer:setPosition(32, 16)
 
 	-- Setup input
-	self.inputManager = InputManager.new()
+	self.inputManager = InputManager.new(false, true)
 	self:addChild(self.inputManager)
 
 	-- Bullets
@@ -38,6 +39,11 @@ function GameScreen:load(isHost)
 	self.particlesTextures = {}
 	self.particlesTextures["smoke"] = Texture.new("assets/particles/smoke.png")
 	self.particles = {}
+
+	-- User interface layer
+	self.uiContainer = GameUI.new(self.inputManager)
+	self:addChild(self.uiContainer)
+	self.uiContainer:addEventListener("onFire", self.shoot, self)
 
 	-- Networking stuff
 	self.isHost = isHost
@@ -137,6 +143,9 @@ function GameScreen:update(deltaTime)
 			table.remove(self.particles, i)	
 		end
 	end
+
+	-- Update UI
+	self.uiContainer:setBarValue("power", self.localPlayer.power)
 
 	-- Update bullets
 	for i, bullet in ipairs(self.bullets) do

@@ -2,19 +2,23 @@ local InputManager = Core.class(Sprite)
 InputManager.TOUCH_BEGIN 	= "InputTouchBegin"
 InputManager.TOUCH_END 		= "InputTouchEnd"
 
-function InputManager:init()
+function InputManager:init(isTouchInputEnabled, isKeyboardInputEnabled)
 	self.valueX, self.valueY = 0, 0
 	self.maxTouchValue = 70
 	self.startX, self.startY = 0, 0
 
 	-- Touch input
-	self:addEventListener(Event.TOUCHES_BEGIN, self.touchBegin, self)
-	self:addEventListener(Event.TOUCHES_MOVE, self.touchMove, self)
-	self:addEventListener(Event.TOUCHES_END, self.touchEnd, self)
-	self:addEventListener(Event.TOUCHES_CANCEL, self.touchEnd, self)
+	if isTouchInputEnabled then
+		self:addEventListener(Event.TOUCHES_BEGIN, self.touchBegin, self)
+		self:addEventListener(Event.TOUCHES_MOVE, self.touchMove, self)
+		self:addEventListener(Event.TOUCHES_END, self.touchEnd, self)
+		self:addEventListener(Event.TOUCHES_CANCEL, self.touchEnd, self)
+	end
 	-- Keyboard input
-	self:addEventListener(Event.KEY_DOWN, self.keyDown, self)
-	self:addEventListener(Event.KEY_UP, self.keyUp, self)
+	if isKeyboardInputEnabled then
+		self:addEventListener(Event.KEY_DOWN, self.keyDown, self)
+		self:addEventListener(Event.KEY_UP, self.keyUp, self)
+	end
 end
 
 function InputManager:touchBegin(e)

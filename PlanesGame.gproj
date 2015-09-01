@@ -20,6 +20,7 @@
   <file source="C:/Program Files (x86)/Gideros/All Plugins/LuaSocket/source/socket.lua"/>
   <file source="scripts/NetworkManager.lua"/>
   <file source="scripts/InputManager.lua"/>
+  <file source="scripts/GameUI.lua"/>
   <file source="scripts/Particle.lua"/>
   <file source="scripts/Plane.lua"/>
   <file source="scripts/Bullet.lua"/>
@@ -31,6 +32,16 @@
     <file source="assets/background/1.png"/>
     <file source="assets/background/2.png"/>
     <file source="assets/background/3.png"/>
+  </folder>
+  <folder name="ui">
+    <file source="assets/ui/left.png"/>
+    <file source="assets/ui/right.png"/>
+    <file source="assets/ui/up.png"/>
+    <file source="assets/ui/down.png"/>
+    <file source="assets/ui/fire.png"/>
+
+    <file source="assets/ui/bar.png"/>
+    <file source="assets/ui/bar_l.png"/>
   </folder>
   <folder name="particles">
     <file source="assets/particles/smoke.png"/>
