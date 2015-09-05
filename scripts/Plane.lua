@@ -1,7 +1,17 @@
 local Plane = Core.class(Sprite)
 
-function Plane:init(isLocal)
-	self.bitmap = Bitmap.new(Texture.new("assets/plane.png"))
+function Plane:init(isLocal, colorName)
+	local texturePath = "assets/plane_red.png"
+	if not colorName then
+		texturePath = "assets/plane_red.png"
+		if not isLocal then
+			texturePath = "assets/plane_blue.png"
+		end
+	else
+		texturePath = "assets/plane_" .. tostring(colorName) .. ".png"
+	end
+	
+	self.bitmap = Bitmap.new(Texture.new(texturePath))
 	self.bitmap:setAnchorPoint(0.5, 0.5)
 	self:addChild(self.bitmap)
 
@@ -29,8 +39,7 @@ function Plane:init(isLocal)
 		self.nameText:setScale(0.25)
 		self.nameText:setPosition(-self.nameText:getWidth() / 2, - self.bitmap:getHeight())
 		self.nameText:setTextColor(0xFFFFFF)
-		self:addChild(self.nameText)
-		self.bitmap:setColorTransform(0.2, 0.5, 1, 1)
+		--self:addChild(self.nameText)
 	end
 
 	self.health = 100
@@ -62,9 +71,9 @@ function Plane:update(deltaTime)
 
 		self:setPosition(x, y)
 	else
-		self.remoteVars["x"] = networkManager:getValue("px") or 0
-		self.remoteVars["y"] = networkManager:getValue("py") or 0
-		self.remoteVars["rotation"] = networkManager:getValue("rot") or 0
+		self.remoteVars["x"] = networkManager:getValue("px") or self:getX()
+		self.remoteVars["y"] = networkManager:getValue("py") or self:getY()
+		self.remoteVars["rotation"] = networkManager:getValue("rot") or self:getRotation()
 
 		for key, value in pairs(self.remoteVars) do
 			local currentValue = self:get(key)
@@ -74,6 +83,10 @@ function Plane:update(deltaTime)
 			else
 				self:set(key, currentValue + (value - currentValue) * self.interpolationMul)
 			end
+		end
+
+		if math.abs(self.remoteVars["x"] - self:getX()) > 16 then
+			self:setX(self.remoteVars["x"])
 		end
 	end
 end

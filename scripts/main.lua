@@ -3,6 +3,8 @@ utils 	= require "scripts.utils"
 local ScreenManager 	= require "scripts.screens.ScreenManager"
 local NetworkManager 	= require "scripts.NetworkManager" 
 
+application:setBackgroundColor(0x008CFF)
+
 -- Screen size and game scale
 screenWidth, screenHeight = utils:getScreenSize()
 mainScale = screenHeight / 64
@@ -15,4 +17,4 @@ networkManager = NetworkManager.new()
 screenManager = ScreenManager.new()
 screenManager:setScale(mainScale)
 stage:addChild(screenManager)
-screenManager:loadScreen("GameScreen")
+screenManager:loadScreen("GameScreen", false)

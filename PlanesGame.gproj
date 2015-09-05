@@ -30,9 +30,16 @@
  </folder>
  <folder name="assets">
   <folder name="background">
-    <file source="assets/background/1.png"/>
-    <file source="assets/background/2.png"/>
-    <file source="assets/background/3.png"/>
+    <folder name="1">
+      <file source="assets/background/1/1.png"/>
+      <file source="assets/background/1/2.png"/>
+      <file source="assets/background/1/3.png"/>
+    </folder>
+    <folder name="2">
+      <file source="assets/background/2/1.png"/>
+      <file source="assets/background/2/2.png"/>
+      <file source="assets/background/2/3.png"/>
+    </folder>
   </folder>
   <folder name="ui">
     <file source="assets/ui/left.png"/>
@@ -48,7 +55,8 @@
     <file source="assets/particles/smoke.png"/>
     <file source="assets/particles/fire.png"/>
   </folder>
-  <file source="assets/plane.png"/>
+  <file source="assets/plane_red.png"/>
+  <file source="assets/plane_blue.png"/>
   <file source="assets/bullet.png"/>
  </folder>
 </project>

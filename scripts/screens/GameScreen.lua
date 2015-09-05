@@ -10,21 +10,30 @@ local ExplosionParticle = require "scripts.ExplosionParticle"
 local GameScreen = Core.class(Screen)
 
 function GameScreen:load(isHost)
-	-- Create world container
-	self.world = Sprite.new()
-	self:addChild(self.world)
+	self.mainCameraContainer = Sprite.new()
+	self:addChild(self.mainCameraContainer)
+	self.shakeDelay = 0
 
 	-- Create background
-	self.background = Background.new()
-	self.world:addChild(self.background)
+	self.background = Background.new(2)
+	self.mainCameraContainer:addChild(self.background)
 
-	-- Create remote player
-	self.remotePlayer = Plane.new(false)
+	-- Create world container
+	self.world = Sprite.new()
+	self.mainCameraContainer:addChild(self.world)
+
+	-- Create players
+	local remotePlayerColor = "blue"
+	local localPlayerColor = "red"
+	if not isHost then
+		remotePlayerColor = "red"
+		localPlayerColor = "blue"
+	end
+	self.remotePlayer = Plane.new(false, remotePlayerColor)
 	self.world:addChild(self.remotePlayer)
-	self.remotePlayer:setPosition(0, 0)
+	self.remotePlayer:setPosition(32, 32)
 
-	-- Create local player
-	self.localPlayer = Plane.new(true)
+	self.localPlayer = Plane.new(true, localPlayerColor)
 	self.world:addChild(self.localPlayer)
 	self.localPlayer:setPosition(16, 32)
 
@@ -66,6 +75,8 @@ function GameScreen:load(isHost)
 
 	self.shootDelay = 0
 	self.respawnDelay = 0
+
+	self.shakeDelay = 1
 end
 
 function GameScreen:onTouch(e)
@@ -171,6 +182,7 @@ function GameScreen:playerDeath(player)
 		self.respawnDelay = 3
 		networkManager:triggerRemoteEvent("remoteDeath")
 	end
+	self:shakeCamera(1)
 end
 
 function GameScreen:remotePlayerRespawn()
@@ -193,6 +205,10 @@ function GameScreen:playerRespawn(player)
 		player:setRotation(0)
 		networkManager:triggerRemoteEvent("remoteRespawn")
 	end
+end
+
+function GameScreen:shakeCamera(delay)
+	self.shakeDelay = delay
 end
 
 function GameScreen:update(deltaTime)
@@ -242,14 +258,14 @@ function GameScreen:update(deltaTime)
 		bullet:update(deltaTime)
 		local bx, by = bullet:getPosition()
 		bx, by = self.world:localToGlobal(bx, by)
-		if not self.localPlayer.isDead and not bullet.isLocal and self.localPlayer:hitTestPoint(bx, by) then
+		if not self.localPlayer.isDead and not bullet.isLocal and self.localPlayer.bitmap:hitTestPoint(bx, by) then
 			self.localPlayer.health = self.localPlayer.health - 25
 			if self.localPlayer.health <= 0 then
 				self:playerDeath(self.localPlayer)
 			end
 			networkManager:triggerRemoteEvent("remoteHit", self.localPlayer.health)
 			self:removeBullet(i)	
-		elseif not self.remotePlayer.isDead and bullet.isLocal and self.remotePlayer:hitTestPoint(bx, by) then
+		elseif not self.remotePlayer.isDead and bullet.isLocal and self.remotePlayer.bitmap:hitTestPoint(bx, by) then
 			self:removeBullet(i)	
 		elseif bullet.lifetime <= 0 then
 			self:removeBullet(i)
@@ -267,7 +283,18 @@ function GameScreen:update(deltaTime)
 	local worldX = -self.localPlayer:getX() + screenWidth / 2
 	worldX = math.max(worldX, -self.background:getWidth() + screenWidth)
 	worldX = math.min(worldX, 0)
+	self.background:move(worldX - self.world:getX())
 	self.world:setX(worldX)
+
+	-- Camera shaking
+	if self.shakeDelay > 0 then	
+		local shakeX = math.random() * self.shakeDelay * 4 - self.shakeDelay * 2
+		local shakeY = math.random() * self.shakeDelay * 3
+		self.mainCameraContainer:setPosition(shakeX, shakeY)
+		self.shakeDelay = self.shakeDelay - deltaTime
+	else
+		self.mainCameraContainer:setPosition(0, 0)
+	end
 
 	-- Input
 	self.localPlayer:setRotation(self.localPlayer:getRotation() + self.inputManager.valueX * self.localPlayer.rotationSpeed * deltaTime)
