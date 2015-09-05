@@ -9,11 +9,9 @@ function MenuScreen:load()
 	self.background = Background.new()
 	self:addChild(self.background)
 
-	self.menuText = TextField.new()
-	self.menuText:setText("MAIN MENU")
-	self.menuText:setTextColor(0xFFFFFF)
+	self.menuText = Bitmap.new(Texture.new("assets/logo.png"))
 	self:addChild(self.menuText)
-	self.menuText:setPosition(screenWidth / 2 - self.menuText:getWidth() / 2, 10)
+	self.menuText:setPosition(screenWidth / 2 - self.menuText:getWidth() / 2, 0)
 
 	self.time = 0
 
@@ -45,7 +43,7 @@ end
 
 function MenuScreen:update(deltaTime)
 	self.time = self.time + deltaTime
-	self.menuText:setY(self.menuText:getHeight() + 4 + math.sin(self.time * 4) * 1.5)
+	self.menuText:setY(4 + math.sin(self.time * 4) * 1.5)
 	self.background:move(BACKGROUND_MOVEMENT_SPEED * deltaTime)
 end
 

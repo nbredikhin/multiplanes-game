@@ -47,6 +47,11 @@
       <file source="assets/background/3/3.png"/>
       <file source="assets/background/3/effects.png"/>
     </folder>
+    <folder name="4">
+      <file source="assets/background/4/1.png"/>
+      <file source="assets/background/4/2.png"/>
+      <file source="assets/background/4/3.png"/>
+    </folder>
   </folder>
   <folder name="ui">
     <file source="assets/ui/left.png"/>
@@ -67,5 +72,6 @@
   <file source="assets/bullet.png"/>
   <file source="assets/bonus1.png"/>
   <file source="assets/bonus2.png"/>
+  <file source="assets/logo.png"/>
  </folder>
 </project>

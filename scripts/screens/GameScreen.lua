@@ -17,7 +17,7 @@ function GameScreen:load(isHost)
 	self.shakeDelay = 0
 
 	-- Create background
-	self.background = Background.new(2)
+	self.background = Background.new(4)
 	self.mainCameraContainer:addChild(self.background)
 
 	-- Create world container
