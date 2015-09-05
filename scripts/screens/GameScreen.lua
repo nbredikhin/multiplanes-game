@@ -17,7 +17,7 @@ function GameScreen:load(isHost)
 	self.shakeDelay = 0
 
 	-- Create background
-	self.background = Background.new(3)
+	self.background = Background.new(2)
 	self.mainCameraContainer:addChild(self.background)
 
 	-- Create world container
@@ -86,6 +86,7 @@ end
 function GameScreen:onTouch(e)
 	local x, y = self.world:globalToLocal(e.touch.x, e.touch.y)
 	--self:createBonus(x)
+	--self:playerDeath(self.localPlayer)
 end
 
 function GameScreen:remoteUpdateName(e)
@@ -228,6 +229,7 @@ function GameScreen:update(deltaTime)
 	networkManager:setValue("px", self.localPlayer:getX())
 	networkManager:setValue("py", self.localPlayer:getY())
 	networkManager:setValue("rot", self.localPlayer:getRotation())
+	networkManager:setValue("pow", self.localPlayer.power)
 
 	-- Update players
 	self.localPlayer:update(deltaTime)

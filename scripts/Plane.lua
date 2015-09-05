@@ -29,7 +29,7 @@ function Plane:init(isLocal, colorName)
 
 	self.isLocal = isLocal
 	self.remoteVars = {}
-	self.interpolationMul = 0.1
+	self.interpolationMul = 0.08
 
 	self.isDead = false
 
@@ -50,43 +50,58 @@ function Plane:update(deltaTime)
 	if self.isDead then
 		return
 	end
-	if self.isLocal then
-		-- Limit power
-		if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
-			local rotationDiff = 1 - math.abs(270 - self:getRotation()) / self.rotationLimit
-			self:setPower(self.power - self.powerSpeed * self.rotationLimitMul * rotationDiff * deltaTime)
-		end
-		local x = self:getX()
-		local y = self:getY()
-		
-		local rotationRad = self:getRotation() / 180 * math.pi
-		local moveX = math.cos(rotationRad)
-		local moveY = math.sin(rotationRad)
+	-- Limit power
+	if self:getRotation() >= 270 - self.rotationLimit and self:getRotation() <= 270 + self.rotationLimit then
+		local rotationDiff = 1 - math.abs(270 - self:getRotation()) / self.rotationLimit
+		self:setPower(self.power - self.powerSpeed * self.rotationLimitMul * rotationDiff * deltaTime)
+	end
+	local x = self:getX()
+	local y = self:getY()
+	
+	local rotationRad = self:getRotation() / 180 * math.pi
+	local moveX = math.cos(rotationRad)
+	local moveY = math.sin(rotationRad)
 
-		local moveSpeed = self.speed * self.power
-		local gravitySpeed = moveY + self.gravity * (1 - self.power)
+	local moveSpeed = self.speed * self.power
+	local gravitySpeed = moveY + self.gravity * (1 - self.power)
 
-		x = x + moveX * moveSpeed * deltaTime
-		y = y + (moveY * moveSpeed + gravitySpeed) * deltaTime
+	x = x + moveX * moveSpeed * deltaTime
+	y = y + (moveY * moveSpeed + gravitySpeed) * deltaTime
 
-		self:setPosition(x, y)
-	else
+	self:setPosition(x, y)
+
+	if not self.isLocal then
 		self.remoteVars["x"] = networkManager:getValue("px") or self:getX()
 		self.remoteVars["y"] = networkManager:getValue("py") or self:getY()
 		self.remoteVars["rotation"] = networkManager:getValue("rot") or self:getRotation()
+		self:setPower(networkManager:getValue("pow"))
 
 		for key, value in pairs(self.remoteVars) do
 			local currentValue = self:get(key)
 			if key == "rotation" then
 				value = utils.wrapAngle(value)
-				self:setRotation(currentValue - utils.differenceBetweenAngles(value, currentValue)* self.interpolationMul)
+				self:setRotation(currentValue - utils.differenceBetweenAngles(value, currentValue) * 0.2)
 			else
-				self:set(key, currentValue + (value - currentValue) * self.interpolationMul)
+				--self:set(key, currentValue + (value - currentValue) * self.interpolationMul)
 			end
+		end
+
+		self:setX(self:getX() + (self.remoteVars["x"] - self:getX()) * self.interpolationMul)
+		self:setY(self:getY() + (self.remoteVars["y"] - self:getY()) * self.interpolationMul)
+
+
+		if math.abs(self.remoteVars["x"] - self:getX()) > 5 then
+			self:setX(self:getX() + (self.remoteVars["x"] - self:getX()) * 0.5)
+		end
+		if math.abs(self.remoteVars["y"] - self:getY()) > 5 then
+			self:setY(self:getY() + (self.remoteVars["y"] - self:getY()) * 0.5)
 		end
 
 		if math.abs(self.remoteVars["x"] - self:getX()) > 16 then
 			self:setX(self.remoteVars["x"])
+		end
+		if math.abs(self.remoteVars["y"] - self:getY()) > 16 then
+			self:setY(self.remoteVars["y"])
 		end
 	end
 end
