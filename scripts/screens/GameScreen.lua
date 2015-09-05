@@ -1,26 +1,32 @@
-local Background 	= require "scripts.menu.Background"
-local Bullet 		= require "scripts.Bullet"
-local InputManager 	= require "scripts.InputManager"
-local Plane 		= require "scripts.Plane"
-local Screen 		= require "scripts.screens.Screen"
-local Particle 		= require "scripts.Particle"
-local GameUI 		= require "scripts.GameUI"
+local Background 		= require "scripts.menu.Background"
+local Bonus 			= require "scripts.Bonus"
+local Bullet 			= require "scripts.Bullet"
 local ExplosionParticle = require "scripts.ExplosionParticle"
+local GameUI 			= require "scripts.GameUI"
+local InputManager 		= require "scripts.InputManager"
+local Particle 			= require "scripts.Particle"
+local Plane 			= require "scripts.Plane"
+local Screen 			= require "scripts.screens.Screen"
 
 local GameScreen = Core.class(Screen)
 
 function GameScreen:load(isHost)
+	self.WORLD_WIDTH = 160
 	self.mainCameraContainer = Sprite.new()
 	self:addChild(self.mainCameraContainer)
 	self.shakeDelay = 0
 
 	-- Create background
-	self.background = Background.new(2)
+	self.background = Background.new(3)
 	self.mainCameraContainer:addChild(self.background)
 
 	-- Create world container
 	self.world = Sprite.new()
 	self.mainCameraContainer:addChild(self.world)
+
+	self.bonuses = {}
+	self.bonusTexture1 = Texture.new("assets/bonus1.png")
+	self.bonusTexture2 = Texture.new("assets/bonus2.png")
 
 	-- Create players
 	local remotePlayerColor = "blue"
@@ -75,14 +81,11 @@ function GameScreen:load(isHost)
 
 	self.shootDelay = 0
 	self.respawnDelay = 0
-
-	self.shakeDelay = 1
 end
 
 function GameScreen:onTouch(e)
-	--local x, y = self.world:globalToLocal(e.touch.x, e.touch.y)
-	--self:createExplosion(x, y)
-	--
+	local x, y = self.world:globalToLocal(e.touch.x, e.touch.y)
+	--self:createBonus(x)
 end
 
 function GameScreen:remoteUpdateName(e)
@@ -102,6 +105,14 @@ function GameScreen:createBullet(x, y, rotation, isLocal)
 	table.insert(self.bullets, bullet)
 end
 
+function GameScreen:createBonus(posX)
+	local bonus = Bonus.new(self.bonusTexture1, self.bonusTexture2)
+	bonus:setX(posX)
+	bonus:setY(-bonus:getHeight())
+	self.world:addChild(bonus)
+	table.insert(self.bonuses, bonus)
+end
+
 function GameScreen:removeBullet(index)
 	if not self.bullets[index] then
 		return
@@ -111,7 +122,7 @@ function GameScreen:removeBullet(index)
 end
 
 function GameScreen:shoot()
-	if self.shootDelay >= 0 then
+	if self.shootDelay >= 0 or self.localPlayer.isDead then
 		return
 	end
 	local x, y, rotation = self.localPlayer:getX(), self.localPlayer:getY(), self.localPlayer:getRotation()
@@ -272,16 +283,25 @@ function GameScreen:update(deltaTime)
 		end
 	end
 
+	-- Update bonuses
+	for i, bonus in ipairs(self.bonuses) do
+		bonus:update(deltaTime)
+		if bonus:getY() - bonus:getHeight() > screenHeight then
+			self.world:removeChild(bonus)
+			table.remove(self.bonuses, i)
+		end
+	end
+
 	-- World bounds
-	if self.localPlayer:getX() > self.background:getWidth() then
+	if self.localPlayer:getX() > self.WORLD_WIDTH then
 		self.localPlayer:setX(0)
 	elseif self.localPlayer:getX() < 0 then
-		self.localPlayer:setX(self.background:getWidth())
+		self.localPlayer:setX(self.WORLD_WIDTH)
 	end
 
 	-- Camera following player
 	local worldX = -self.localPlayer:getX() + screenWidth / 2
-	worldX = math.max(worldX, -self.background:getWidth() + screenWidth)
+	worldX = math.max(worldX, -self.WORLD_WIDTH + screenWidth)
 	worldX = math.min(worldX, 0)
 	self.background:move(worldX - self.world:getX())
 	self.world:setX(worldX)
@@ -289,7 +309,7 @@ function GameScreen:update(deltaTime)
 	-- Camera shaking
 	if self.shakeDelay > 0 then	
 		local shakeX = math.random() * self.shakeDelay * 4 - self.shakeDelay * 2
-		local shakeY = math.random() * self.shakeDelay * 3
+		local shakeY = math.random() * self.shakeDelay * 3 - self.shakeDelay * 1.5
 		self.mainCameraContainer:setPosition(shakeX, shakeY)
 		self.shakeDelay = self.shakeDelay - deltaTime
 	else
@@ -297,8 +317,16 @@ function GameScreen:update(deltaTime)
 	end
 
 	-- Input
-	self.localPlayer:setRotation(self.localPlayer:getRotation() + self.inputManager.valueX * self.localPlayer.rotationSpeed * deltaTime)
-	self.localPlayer:setPower(self.localPlayer.power - self.inputManager.valueY * self.localPlayer.powerSpeed * deltaTime)
+	if not self.localPlayer.isDead then
+		self.localPlayer:setRotation(self.localPlayer:getRotation() + self.inputManager.valueX * self.localPlayer.rotationSpeed * deltaTime)
+		local valueY = 0
+		if self.inputManager.valueY > 0 then
+			valueY = self.inputManager.valueY
+		else
+			valueY = -1
+		end
+		self.localPlayer:setPower(self.localPlayer.power - valueY * self.localPlayer.powerSpeed * deltaTime)
+	end
 
 	-- Respawn
 	if self.localPlayer.isDead then

@@ -10,8 +10,8 @@ function GameUI:init(inputManager)
 	self.buttons["down"] = Bitmap.new(Texture.new("assets/ui/down.png"))
 	self.buttons["down"]:setPosition(1, screenHeight - self.buttons["down"]:getHeight() - 1)
 
-	self.buttons["up"] = Bitmap.new(Texture.new("assets/ui/up.png"))
-	self.buttons["up"]:setPosition(1, self.buttons["down"]:getY() - self.buttons["up"]:getHeight() - 1)
+	self.buttons["fire"] = Bitmap.new(Texture.new("assets/ui/fire.png"))
+	self.buttons["fire"]:setPosition(1, self.buttons["down"]:getY() - self.buttons["fire"]:getHeight() - 1)
 
 	self.buttons["right"] = Bitmap.new(Texture.new("assets/ui/right.png"))
 	self.buttons["right"]:setX(screenWidth - self.buttons["right"]:getWidth() - 1)
@@ -21,15 +21,15 @@ function GameUI:init(inputManager)
 	self.buttons["left"]:setX(self.buttons["right"]:getX() - self.buttons["left"]:getWidth() - 1)
 	self.buttons["left"]:setY(self.buttons["right"]:getY())
 
-	self.buttons["fire"] = Bitmap.new(Texture.new("assets/ui/fire.png"))
+	--[[self.buttons["fire"] = Bitmap.new(Texture.new("assets/ui/fire.png"))
 	self.buttons["fire"]:setX(self.buttons["left"]:getX())
-	self.buttons["fire"]:setY(self.buttons["left"]:getY() - self.buttons["fire"]:getHeight() - 1)
+	self.buttons["fire"]:setY(self.buttons["left"]:getY() - self.buttons["fire"]:getHeight() - 1)]]
 
 	self.bars = {}
 	-- Power bar
 	local powerBarBackground = Bitmap.new(Texture.new("assets/ui/bar.png"))
-	powerBarBackground:setX(self.buttons["up"]:getX() + self.buttons["up"]:getWidth() + 1)
-	powerBarBackground:setY(self.buttons["up"]:getY())
+	powerBarBackground:setX(self.buttons["down"]:getX() + self.buttons["down"]:getWidth() + 1)
+	powerBarBackground:setY(self.buttons["down"]:getY())
 	self:addChild(powerBarBackground)
 
 	self.bars["power"] = Bitmap.new(Texture.new("assets/ui/bar_l.png"))
@@ -43,8 +43,22 @@ function GameUI:init(inputManager)
 		v:setAlpha(self.BUTTON_ALPHA_UP)
 		self:addChild(v)
 		v:addEventListener(Event.TOUCHES_BEGIN, self.buttonTouchBegin, self)
-		v:addEventListener(Event.TOUCHES_END, self.buttonTouchEnd, self)
 	end
+
+	self.scoreText = TextField.new(nil, "0:0")
+	self.scoreText:setY(self.scoreText:getHeight() + 1)
+	self.scoreText:setTextColor(0xFFFFFF)
+	self.scoreText:setAlpha(0.5)
+	self:addChild(self.scoreText)
+
+	self:setScore(3, 5)
+
+	stage:addEventListener(Event.TOUCHES_END, self.buttonTouchEnd, self)
+end
+
+function GameUI:setScore(score1, score2)
+	self.scoreText:setText(score1 .. ":" .. score2)
+	self.scoreText:setX(screenWidth / 2 - self.scoreText:getWidth() / 2)
 end
 
 function GameUI:setBarValue(name, value)
@@ -65,8 +79,6 @@ function GameUI:buttonTouch(button, isDown)
 		self.inputManager.valueX = 1 * mul
 	elseif button == self.buttons["left"] then
 		self.inputManager.valueX = -1 * mul
-	elseif button == self.buttons["up"] then
-		self.inputManager.valueY = -1 * mul
 	elseif button == self.buttons["down"] then
 		self.inputManager.valueY = 1 * mul
 	end
@@ -90,8 +102,12 @@ function GameUI:buttonTouchEnd(e)
 		return
 	end
 	local button = e:getTarget()
-	button:setAlpha(self.BUTTON_ALPHA_UP)
-	self:buttonTouch(button, false)
+	for k, v in pairs(self.buttons) do
+		v:setAlpha(self.BUTTON_ALPHA_UP)
+		self:buttonTouch(v, false)
+	end
+	
+	--self:buttonTouch(button, false)
 end
 
 return GameUI

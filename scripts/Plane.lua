@@ -10,7 +10,7 @@ function Plane:init(isLocal, colorName)
 	else
 		texturePath = "assets/plane_" .. tostring(colorName) .. ".png"
 	end
-	
+
 	self.bitmap = Bitmap.new(Texture.new(texturePath))
 	self.bitmap:setAnchorPoint(0.5, 0.5)
 	self:addChild(self.bitmap)
@@ -29,7 +29,7 @@ function Plane:init(isLocal, colorName)
 
 	self.isLocal = isLocal
 	self.remoteVars = {}
-	self.interpolationMul = 0.2
+	self.interpolationMul = 0.1
 
 	self.isDead = false
 

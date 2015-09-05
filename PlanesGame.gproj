@@ -25,6 +25,7 @@
   <file source="scripts/Particle.lua"/>
   <file source="scripts/Plane.lua"/>
   <file source="scripts/Bullet.lua"/>
+  <file source="scripts/Bonus.lua"/>
   <file source="scripts/utils.lua"/>
   <file source="scripts/main.lua"/>
  </folder>
@@ -39,6 +40,12 @@
       <file source="assets/background/2/1.png"/>
       <file source="assets/background/2/2.png"/>
       <file source="assets/background/2/3.png"/>
+    </folder>
+    <folder name="3">
+      <file source="assets/background/3/1.png"/>
+      <file source="assets/background/3/2.png"/>
+      <file source="assets/background/3/3.png"/>
+      <file source="assets/background/3/effects.png"/>
     </folder>
   </folder>
   <folder name="ui">
@@ -58,5 +65,7 @@
   <file source="assets/plane_red.png"/>
   <file source="assets/plane_blue.png"/>
   <file source="assets/bullet.png"/>
+  <file source="assets/bonus1.png"/>
+  <file source="assets/bonus2.png"/>
  </folder>
 </project>
